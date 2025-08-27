@@ -1,0 +1,32 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="Playwright Suite" parallel="tests" thread-count="4">
+
+    <test name="Chromium Test">
+        <parameter name="browserName" value="chromium"/>
+        <classes>
+            <class name="HomePage"/>
+        </classes>
+    </test>
+
+    <test name="Firefox Test">
+        <parameter name="browserName" value="firefox"/>
+        <classes>
+            <class name="HomePage"/>
+        </classes>
+    </test>
+
+    <test name="WebKit Test">
+        <parameter name="browserName" value="webkit"/>
+        <classes>
+            <class name="HomePage"/>
+        </classes>
+    </test>
+
+    <test name="Edge Test">
+        <parameter name="browserName" value="edge"/>
+        <classes>
+            <class name="HomePage"/>
+        </classes>
+    </test>
+
+</suite>

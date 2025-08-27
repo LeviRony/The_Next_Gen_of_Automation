@@ -1,0 +1,19 @@
+{
+  "name": "the_next_gen_of_automation",
+  "version": "1.0.0",
+  "description": "Multi-module Maven project: - `_common` – shared Playwright setup, BaseTest, config - `backend` – API tests with Playwright - `frontend` – Web UI tests - `mobile` – device emulation test",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  },
+  "dependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}
