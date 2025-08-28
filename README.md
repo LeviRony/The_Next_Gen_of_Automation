@@ -47,25 +47,6 @@ automation-project
 
 ---
 
-```yaml
-## Module Overview
-
-### 1️⃣ common-module
-
-Contains reusable utilities for all modules:
-
-  - `ConfigReader.java` – Reads environment properties.
-  - `LoggerTest.java` – Logging examples.
-
-  **Sample Usage:**
-
-  ```java
-  String baseUrl = ConfigReader.getProperty("base.url");
-  Logger.
-
-info("Base URL: "+baseUrl);
-```
-
 
 Multi-module Maven project:
 - `common` – shared Playwright setup, BaseTest, config
