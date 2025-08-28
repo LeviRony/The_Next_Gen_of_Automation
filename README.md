@@ -1,5 +1,72 @@
 # Automation Parent (Playwright + TestNG + Allure)
 
+[![Maven](https://img.shields.io/badge/Maven-3.8+-blue)](https://maven.apache.org/)
+[![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+A **multi-module Maven automation project** supporting **Web**, **Mobile**, and **API** testing. Designed for *
+*modularity**, **scalability**, and **reusability**.
+
+---
+
+## Project Structure
+
+```
+automation-project
+│
+├─ pom.xml ← Parent POM
+├─ jenkinsFile 
+│ 
+├─ common-module
+│   ├─ pom.xml
+│   ├─ jenkinsFile
+│   ├─ README.md
+│   └─ src/main/java/com/
+│                     ├─ configurations/
+│                     ├─ dataProviders/
+│                     ├─ pageObjects/
+│                     └─ utilities/
+│
+├─ frontend-module
+│   ├─ pom.xml
+│   ├─ jenkinsFile
+│   ├─ README.md 
+│   └─ src/test/java/webName/
+│
+├─ mobile-module
+│   ├─ pom.xml
+│   ├─ jenkinsFile
+│   ├─ README.md
+│   └─ src/test/java/com/appName/
+│
+└─ backend-module
+    ├─ pom.xml
+    ├─ jenkinsFile
+    └─ src/test/java/
+```
+
+---
+
+```yaml
+## Module Overview
+
+### 1️⃣ common-module
+
+Contains reusable utilities for all modules:
+
+  - `ConfigReader.java` – Reads environment properties.
+  - `LoggerTest.java` – Logging examples.
+
+  **Sample Usage:**
+
+  ```java
+  String baseUrl = ConfigReader.getProperty("base.url");
+  Logger.
+
+info("Base URL: "+baseUrl);
+```
+
+
 Multi-module Maven project:
 - `common` – shared Playwright setup, BaseTest, config
 - `backend` – API tests with Playwright

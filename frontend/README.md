@@ -1,4 +1,46 @@
-# playwright_project
+# Frontend WebUI Module - Playwright_project
+
+Contains web UI tests and page objects.
+
+Example Page Object:
+
+```java
+public class LoginPage {
+    private WebDriver driver;
+
+    public LoginPage(WebDriver driver) {
+        this.driver = driver;
+    }
+
+    public void enterUsername(String username) {
+        driver.findElement(By.id("username")).sendKeys(username);
+    }
+
+    public void enterPassword(String password) {
+        driver.findElement(By.id("password")).sendKeys(password);
+    }
+
+    public void clickLogin() {
+        driver.findElement(By.id("loginBtn")).click();
+    }
+}
+```
+
+Sample Test:
+
+```java
+
+@Test
+public void testLogin() {
+    LoginPage loginPage = new LoginPage(driver);
+    loginPage.enterUsername("user");
+    loginPage.enterPassword("pass");
+    loginPage.clickLogin();
+}
+
+```
+
+---
 
 ## Running Codegen
 
