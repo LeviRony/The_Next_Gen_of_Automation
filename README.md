@@ -6,6 +6,13 @@
 
 A **multi-module Maven automation project** supporting **Web**, **Mobile**, and **API** testing. Designed for *
 *modularity**, **scalability**, and **reusability**.
+---
+
+## Multi-module Maven project:
+- `common-module` – shared Playwright setup, BaseTest, config
+- `backend-module` – API tests with Playwright
+- `frontend-module` – Web UI tests
+- `mobile-module` – device emulation test
 
 ---
 
@@ -48,23 +55,9 @@ automation-project
 ---
 
 
-Multi-module Maven project:
-- `common` – shared Playwright setup, BaseTest, config
-- `backend` – API tests with Playwright
-- `frontend` – Web UI tests
-- `mobile` – device emulation test
 
 
-## Prerequisites
-- Java 17+
-- Maven 3.9+
-
-
-## First run (install Playwright browsers)
-From the project root:
-```bash
-mvn -q -pl :common exec:java -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps"
-```
+---
 
 
 ## Run tests

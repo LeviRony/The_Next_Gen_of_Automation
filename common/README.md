@@ -1,6 +1,11 @@
-## Module Overview
+## 1️Common Module - Projects Configurations 
 
-### 1️common-module
+
+## Prerequisites
+- Java 17+
+- Maven 3.9+
+
+---
 
 Contains reusable utilities for all modules:
 
