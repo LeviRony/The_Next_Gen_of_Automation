@@ -6,8 +6,6 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 
 
-import static utilities.PlaywrightUtils.*;
-
 public class HomePageObjects {
 
     private final Page page;

@@ -1,7 +1,6 @@
 package utilities;
 
 import com.microsoft.playwright.*;
-import com.microsoft.playwright.options.LoadState;
 import configurations.BaseUri;
 import io.qameta.allure.Step;
 import org.slf4j.Logger;
@@ -74,14 +73,5 @@ public class FrontendBaseTest {
     public void closeBrowser() {
         if (browser != null) browser.close();
         if (playwright != null) playwright.close();
-    }
-
-
-    @Step
-    public void goToPractice(String urlPath) {
-        String uri = BaseUri.urlPractice();
-        page.navigate(uri);
-        System.out.println(">>>>>   Browsing to: " + uri);
-        page.waitForURL(uri);
     }
 }

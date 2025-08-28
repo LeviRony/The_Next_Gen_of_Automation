@@ -7,14 +7,17 @@ import org.testng.annotations.Test;
 import pageObjects.HomePageObjects;
 import utilities.FrontendBaseTest;
 
+import static configurations.BaseUri.*;
+import static utilities.PlaywrightUtils.*;
+
 public class HomePageTests extends FrontendBaseTest {
 
-    @Test(dataProvider = "searchFor", dataProviderClass = HomePageProviders.class)
+    @Test(groups = {"Regression"}, dataProvider = "searchFor", dataProviderClass = HomePageProviders.class)
     @Feature("Web")
     @Story("Search")
     @Description("Open site and search with different queries")
     public void googleTitle(Flow data) {
-        goToPractice("");
+        navigateTo(urlPractice());
         new HomePageObjects(page).search(data.query());
     }
 }

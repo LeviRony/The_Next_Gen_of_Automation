@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "**" ]
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  actions: write
+  checks: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build (no tests)
+        run: mvn -q -DskipTests install
+
+      # QUALITY GATE 1: Semgrep (blocking)
+      - name: Semgrep SAST
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: ./.semgrep.yml
+          generateSarif: true
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN || '' }}
+        env:
+          SEMGREP_TIMEOUT: 300
+
+      # QUALITY GATE 2: OWASP Dependency-Check (blocking on high severity)
+      - name: OWASP Dependency-Check
+        run: |
+          mvn -q org.owasp:dependency-check-maven:check \
+            -Dformat=ALL -DfailBuildOnCVSS=7
+
+      - name: Smoke tests (API + UI)
+        if: github.event_name == 'pull_request'
+        run: mvn -q -Psmoke -pl api-tests,ui-tests test
+
+      - name: Regression tests (E2E)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: mvn -q -Pregression -pl e2e-tests test
+
+      - name: Archive surefire results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: "**/target/surefire-reports/**"
+          if-no-files-found: ignore
+
+      - name: Generate Allure report
+        if: always()
+        run: mvn -q io.qameta.allure:allure-maven:report || true
+
+      - name: Upload Allure site artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "**/target/site/allure-maven-plugin"
+          retention-days: 7
+
+  deploy-pages:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build-test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Optional: Allure TestOps upload
+  allure-testops:
+    runs-on: ubuntu-latest
+    needs: [ build-test ]
+    if: ${{ secrets.ALLURE_ENDPOINT && secrets.ALLURE_PROJECT_ID && secrets.ALLURE_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download allure-results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Download allurectl
+        run: |
+          curl -sSL https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -o allurectl
+          chmod +x allurectl
+
+      - name: Upload to Allure TestOps
+        env:
+          ALLURE_ENDPOINT: ${{ secrets.ALLURE_ENDPOINT }}
+          ALLURE_PROJECT_ID: ${{ secrets.ALLURE_PROJECT_ID }}
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+          ALLURE_LAUNCH_NAME: "CI ${{ github.workflow }} #${{ github.run_number }}"
+          ALLURE_RESULTS: "allure-results"
+        run: |
+          ./allurectl upload --project-id "$ALLURE_PROJECT_ID" --endpoint "$ALLURE_ENDPOINT" \
+            --token "$ALLURE_TOKEN" "$ALLURE_RESULTS" || true
