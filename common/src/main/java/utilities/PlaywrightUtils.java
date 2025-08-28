@@ -2,28 +2,26 @@ package utilities;
 
 import com.microsoft.playwright.FrameLocator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.LoadState;
 import io.qameta.allure.Step;
 
 public class PlaywrightUtils {
-    public static Page page;
 
-    public PlaywrightUtils(Page page) {
-        this.page = page;
-    }
+    protected static Page page;
 
     @Step
-    public static void navigateTo(String uri) {
+    public static void navigateTo(Page page,String uri) {
         page.navigate(uri);
         System.out.println("\u001B[34m[INFO] Navigated to: " + uri + "\u001B[0m");
-        page.waitForURL(uri);
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
     }
 
-    public static void clickInsideIframe(String frameLocator, String elementLocator) {
+    public void clickInsideIframe(String frameLocator, String elementLocator) {
         FrameLocator frame = page.frameLocator(frameLocator);
         frame.locator(elementLocator).click();
     }
 
-    public static boolean isIframeElementVisible(String frameLocator, String elementLocator) {
+    public boolean isIframeElementVisible(String frameLocator, String elementLocator) {
         FrameLocator frame = page.frameLocator(frameLocator);
         return frame.locator(elementLocator).isVisible();
     }

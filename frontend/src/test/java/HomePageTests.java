@@ -1,3 +1,4 @@
+import com.microsoft.playwright.Page;
 import dataProviders.frontend.HomePageProviders;
 import dataProviders.frontend.HomePageProviders.Flow;
 import io.qameta.allure.Feature;
@@ -10,14 +11,16 @@ import utilities.FrontendBaseTest;
 import static configurations.BaseUri.*;
 import static utilities.PlaywrightUtils.*;
 
+
 public class HomePageTests extends FrontendBaseTest {
+
 
     @Test(groups = {"Regression"}, dataProvider = "searchFor", dataProviderClass = HomePageProviders.class)
     @Feature("Web")
     @Story("Search")
     @Description("Open site and search with different queries")
     public void googleTitle(Flow data) {
-        navigateTo(urlPractice());
+        navigateTo(page,urlPractice());
         new HomePageObjects(page).search(data.query());
     }
 }

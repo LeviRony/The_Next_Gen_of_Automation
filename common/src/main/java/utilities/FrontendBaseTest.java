@@ -74,4 +74,13 @@ public class FrontendBaseTest {
         if (browser != null) browser.close();
         if (playwright != null) playwright.close();
     }
+
+
+
+    public void goToPractice(String urlPath) {
+        String uri = BaseUri.urlPractice();
+        page.navigate(uri);
+        System.out.println(">>>>>   Browsing to: " + uri);
+        page.waitForURL(uri);
+    }
 }
