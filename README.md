@@ -9,6 +9,7 @@ A **multi-module Maven automation project** supporting **Web**, **Mobile**, and 
 ---
 
 ## Multi-module Maven project:
+
 - `common-module` – shared Playwright setup, BaseTest, config
 - `backend-module` – API tests with Playwright
 - `frontend-module` – Web UI tests
@@ -54,13 +55,8 @@ automation-project
 
 ---
 
-
-
-
----
-
-
 ## Run tests
+
 ```bash
 # Run per module:
 
@@ -74,20 +70,24 @@ mvn -pl api test
 ```
 
 ## Allure report
+
 1) Generate results by running tests (Allure results in `**/allure-results`).
 2) Generate aggregated Allure report:
+
 ```
 mvn io.qameta.allure:allure-maven:report
 ```
+
 The HTML report will be in `target/site/allure-maven-plugin` under each module. Open `index.html` in a browser.
 
 ### Notes
+
 - Configure `src/main/resources/config.properties` in `common` or pass JVM properties:
     - `-Dheadless=false` to see the browser.
 - Update devices or base URLs as needed.
 
-
 ## Quick Start
+
 ```bash
 # Build all
 mvn -q -DskipTests install
@@ -109,16 +109,17 @@ cd perf-tests && k6 run scripts/ingest.k6.js
 
 See `Jenkinsfile` for a full CI pipeline (E2E/Allure).
 
-
-
 ## GitHub Actions CI
+
 Workflow`.github/workflows/ci.yml`:
+
 - PR → Smoke (API+UI)
 - push to main → E2E full Sanity, Regression and Negative tests suites
 - artifacts: Surefire + Allure results, Allure HTML
 
 ## Test Groups
-- `Sanity` 
+
+- `Sanity`
 - `Regression`
 - `Negative`
 - `Preformance`
