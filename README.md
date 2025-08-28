@@ -1,4 +1,4 @@
-# Automation Parent (Playwright + TestNG + Allure)
+# Automation Parent (Playwright + Appium + TestNG + Allure)
 
 [![Maven](https://img.shields.io/badge/Maven-3.8+-blue)](https://maven.apache.org/)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
