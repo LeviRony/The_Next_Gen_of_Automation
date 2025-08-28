@@ -1,9 +1,6 @@
 pipeline {
   agent any
   options { ansiColor('xterm'); timestamps() }
-  environment {
-    MAVEN_OPTS = "-Xmx1g"
-    BASE_URL = credentials('qa-base-url')
   }
   stages {
     stage('Checkout') {

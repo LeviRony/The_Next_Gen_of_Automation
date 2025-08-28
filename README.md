@@ -66,20 +66,15 @@ cd perf-tests && k6 run scripts/ingest.k6.js
 
 > Configure base URLs and options via system properties or environment variables (see `core/Env.java`).
 
-## Profiles
-- `smoke` — runs TestNG group `smoke`, headless, parallel
-- `regression` — runs `regression` (and `smoke`), full retries off
-- `perf` — placeholder profile for perf runners
-
-See `Jenkinsfile` for a full CI pipeline (SAST/SCA/Smoke/Contract/E2E/Perf/Allure).
+See `Jenkinsfile` for a full CI pipeline (E2E/Allure).
 
 
 
 ## GitHub Actions CI
-Workflow נמצא תחת `.github/workflows/ci.yml`:
+Workflow`.github/workflows/ci.yml`:
 - PR → Smoke (API+UI)
-- push ל־main → E2E Regression
-- שומר artifacts: Surefire + Allure results, וגם Allure HTML
+- push to main → E2E full Sanity, Regression and Negative tests suites
+- artifacts: Surefire + Allure results, Allure HTML
 
 ## Test Groups
 - `Sanity` 
