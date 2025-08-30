@@ -186,3 +186,14 @@ Are new dependencies necessary and appropriate?
 Does the code build without errors? Does it pass CI checks?
 
 ---
+## Forma
+
+```bash
+mvn -q spotless:check
+
+#or to auto-fix:
+mvn -q spotless:apply
+
+# per-module:
+mvn -q -pl backend -am spotless:check
+```
