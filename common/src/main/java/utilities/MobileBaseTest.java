@@ -1,4 +1,3 @@
 package utilities;
 
-public class MobileBaseTest {
-}
+public class MobileBaseTest {}
