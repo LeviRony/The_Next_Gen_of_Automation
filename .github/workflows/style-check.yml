@@ -1,0 +1,50 @@
+name: Style Auto-Fix (PR)
+
+on:
+  workflow_dispatch: {}          # run manually
+  pull_request:
+    types: [labeled]             # run when a label is added
+    paths:
+      - '**/*.java'
+      - '**/pom.xml'
+      - 'backend/**'
+      - 'frontend/**'
+      - 'mobile/**'
+      - 'common/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autofix:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'auto-fix')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}   # PR branch
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: maven-${{ runner.os }}-
+
+      - name: Run Spotless apply (all modules)
+        run: mvn -B -q -DskipTests spotless:apply
+
+      - name: Commit & push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(style): apply Spotless formatting"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+          branch: ${{ github.head_ref || github.ref_name }}
