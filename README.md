@@ -4,8 +4,6 @@
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-A **multi-module Maven automation project** supporting **Web**, **Mobile**, and **API** testing. Designed for *
-*modularity**, **scalability**, and **reusability**.
 ---
 
 ## Multi-module Maven project:
