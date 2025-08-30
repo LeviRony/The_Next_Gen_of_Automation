@@ -1,8 +1,6 @@
 package utilities;
 
 import com.microsoft.playwright.*;
-import configurations.BaseUri;
-import io.qameta.allure.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
@@ -19,48 +17,34 @@ public class FrontendBaseTest {
     protected Page page;
     Logger log = LoggerFactory.getLogger(FrontendBaseTest.class);
 
-    @BeforeSuite
+    @BeforeSuite(alwaysRun = true)
     @Parameters("browserName")
     public void launchBrowser(@Optional("chromium") String browserName) {
         playwright = Playwright.create();
-
         switch (browserName.toLowerCase()) {
-            case "chromium":
-                browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
-                break;
-            case "firefox":
-                browser = playwright.firefox().launch(new BrowserType.LaunchOptions().setHeadless(false));
-                break;
-            case "webkit":
-                browser = playwright.webkit().launch(new BrowserType.LaunchOptions().setHeadless(false));
-                break;
-            case "edge":
-                browser = playwright.chromium()
-                        .launch(new BrowserType.LaunchOptions().setChannel("msedge").setHeadless(false));
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown browser: " + browserName);
+            case "chromium" -> browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+            case "firefox"  -> browser = playwright.firefox().launch(new BrowserType.LaunchOptions().setHeadless(false));
+            case "webkit"   -> browser = playwright.webkit().launch(new BrowserType.LaunchOptions().setHeadless(false));
+            case "edge"     -> browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("msedge").setHeadless(false));
+            default -> throw new IllegalArgumentException("Unknown browser: " + browserName);
         }
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void createContextAndPage() {
         context = browser.newContext();
         log.info("Start tracing");
         context.tracing().start(new Tracing.StartOptions()
-                .setSnapshots(true)
-                .setScreenshots(true)
-                .setSources(true));
+                .setSnapshots(true).setScreenshots(true).setSources(true));
         page = context.newPage();
     }
 
-
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void closeContext(Method method) throws IOException {
         if (context != null) {
             Files.createDirectories(Paths.get("trace-records"));
-            String testNameAnnotation = method.getAnnotation(Test.class).testName();
-            String traceName = testNameAnnotation.isEmpty() ? method.getName() : testNameAnnotation;
+            String tn = method.getAnnotation(Test.class).testName();
+            String traceName = (tn != null && !tn.isEmpty()) ? tn : method.getName();
             log.info("Stop tracing and save zip");
             context.tracing().stop(new Tracing.StopOptions()
                     .setPath(Paths.get("trace-records/" + traceName + ".zip")));
@@ -69,18 +53,9 @@ public class FrontendBaseTest {
         }
     }
 
-    @AfterSuite
+    @AfterSuite(alwaysRun = true)
     public void closeBrowser() {
         if (browser != null) browser.close();
         if (playwright != null) playwright.close();
-    }
-
-
-
-    public void goToPractice(String urlPath) {
-        String uri = BaseUri.urlPractice();
-        page.navigate(uri);
-        System.out.println(">>>>>   Browsing to: " + uri);
-        page.waitForURL(uri);
     }
 }

@@ -7,21 +7,19 @@ import io.qameta.allure.Step;
 
 public class PlaywrightUtils {
 
-    protected static Page page;
-
     @Step
-    public static void navigateTo(Page page,String uri) {
+    public static void navigateTo(Page page, String uri) {
         page.navigate(uri);
         System.out.println("\u001B[34m[INFO] Navigated to: " + uri + "\u001B[0m");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
     }
 
-    public void clickInsideIframe(String frameLocator, String elementLocator) {
+    public static void clickInsideIframe(Page page, String frameLocator, String elementLocator) {
         FrameLocator frame = page.frameLocator(frameLocator);
         frame.locator(elementLocator).click();
     }
 
-    public boolean isIframeElementVisible(String frameLocator, String elementLocator) {
+    public static boolean isIframeElementVisible(Page page, String frameLocator, String elementLocator) {
         FrameLocator frame = page.frameLocator(frameLocator);
         return frame.locator(elementLocator).isVisible();
     }

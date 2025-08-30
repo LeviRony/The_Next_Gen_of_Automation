@@ -10,10 +10,10 @@ A **multi-module Maven automation project** supporting **Web**, **Mobile**, and 
 
 ## Multi-module Maven project:
 
-- `common-module` – shared Playwright setup, BaseTest, config
-- `backend-module` – API tests with Playwright
-- `frontend-module` – Web UI tests
-- `mobile-module` – device emulation test
+- [`./common/`](./common/) – shared Playwright setup, BaseTest, config
+- [`./backend/`](./backend/) – API tests with Playwright
+- [`./frontend/`](./frontend/) – Web UI tests
+- [`./mobile/`](./mobile/) – device emulation test
 
 ---
 
@@ -52,9 +52,33 @@ automation-project
     ├─ jenkinsFile
     └─ src/test/java/
 ```
+## Dependency Management
+All projects dependencies are heirs versions from main POM.xml
+> ```<dependencyName.version>x.x.x</dependency.version>```
+
+The modules projects calling versions from main POM
+> ```<version>${dependencyName.version}</version>```
+
+
 
 ---
 
+---
+
+---
+
+## 🚀 Getting Started
+
+Ensure you have the following installed:
+
+- Java 17+
+- Maven 3.8+
+- Node.js (for frontend tests, if applicable)
+- PlayWright
+- Appium + Android/iOS SDKs (for mobile tests)
+- Git
+- Allure CLI (for report generation)
+- 
 ## Run tests
 
 ```bash
@@ -96,16 +120,29 @@ mvn -q -DskipTests install
 mvn -q -Psanity -pl api-tests,ui-tests test
 
 # Full regression (staging)
-mvn -q -Pregression -pl api-tests,ui-tests,e2e-tests test
+mvn -q -am -pl frontend, backend, mobile -Dgroups=Regression test
 
 # Run a single test
 mvn -q -pl ui-tests -Dtest=LoginSmokeTest test
 
-# Perf (requires k6 installed on runner)
-cd perf-tests && k6 run scripts/ingest.k6.js
-```
 
+```
+## Test Groups
+
+- `Sanity`
+- `Regression`
+- `Negative`
+- `Preformance`
+- `Load`
+- 
 > Configure base URLs and options via system properties or environment variables (see `core/Env.java`).
+
+## CI - Jenkins 
+Here you can field all the relevant information for connection and running the automation via CI.
+The CI file (JenkinsFile) must run a Test-Suite and not a single tests
+
+**Jenkins file path:** *../JenkinsFile*
+**Machine OS:** *Windows, macOS*
 
 See `Jenkinsfile` for a full CI pipeline (E2E/Allure).
 
@@ -117,10 +154,37 @@ Workflow`.github/workflows/ci.yml`:
 - push to main → E2E full Sanity, Regression and Negative tests suites
 - artifacts: Surefire + Allure results, Allure HTML
 
-## Test Groups
+## 🔍 Code Review Checklist
+When reviewing code, please check the following:
 
-- `Sanity`
-- `Regression`
-- `Negative`
-- `Preformance`
-- `Load`
+- Functionality
+Does the code work as expected? Are all new features or fixes tested?
+
+- Readability
+Is the code easy to understand? Are variable/method names clear and meaningful?
+
+- Consistency
+Does the code follow the project’s style and conventions?
+
+- Maintainability
+Is the code modular and reusable? Are methods/classes well-structured and not too large?
+
+- Tests
+Are there sufficient automated tests? Do tests cover positive and negative cases?
+
+- Documentation
+Are complex parts documented? Are public methods/classes properly commented?
+
+- Performance
+Are there any obvious performance issues or inefficient algorithms?
+
+- Security
+Are inputs validated? Are there any security concerns?
+
+- Dependencies
+Are new dependencies necessary and appropriate?
+
+- Build & CI
+Does the code build without errors? Does it pass CI checks?
+
+---
