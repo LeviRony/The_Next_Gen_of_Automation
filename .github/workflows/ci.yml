@@ -45,7 +45,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21' # or 17 to match your pom
+          java-version: '21' # or 17 to need to match it to main pom.xml
 
       - name: Cache Maven
         uses: actions/cache@v4

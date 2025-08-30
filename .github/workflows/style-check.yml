@@ -1,9 +1,9 @@
 name: Style Auto-Fix (PR)
 
 on:
-  workflow_dispatch: {}          # run manually
+  workflow_dispatch: {}
   pull_request:
-    types: [labeled]             # run when a label is added
+    types: [labeled]
     paths:
       - '**/*.java'
       - '**/pom.xml'
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref || github.ref_name }}   # PR branch
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-java@v4
         with:

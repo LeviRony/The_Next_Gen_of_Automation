@@ -48,6 +48,41 @@
                     <artifactId>allure-maven</artifactId>
                     <version>${allure.maven.plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <version>2.43.0</version>
+                    <configuration>
+                        <lineEndings>UNIX</lineEndings>
+                        <encoding>UTF-8</encoding>
+                        <java>
+                            <includes>
+                                <include>**/src/main/java/**/*.java</include>
+                                <include>**/src/test/java/**/*.java</include>
+                            </includes>
+
+                            <removeUnusedImports/>
+                            <importOrder/>
+                            <googleJavaFormat>
+                                <version>1.17.0</version>
+                                <style>AOSP</style>
+                            </googleJavaFormat>
+                        </java>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <configuration>
+                        <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+                        <encoding>UTF-8</encoding>
+                        <consoleOutput>true</consoleOutput>
+                        <failsOnError>true</failsOnError>
+                        <violationSeverity>error</violationSeverity>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
