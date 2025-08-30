@@ -11,7 +11,7 @@
 - [`./common/`](./common/) – shared Playwright setup, BaseTest, config
 - [`./backend/`](./backend/) – API tests with Playwright
 - [`./frontend/`](./frontend/) – Web UI tests
-- [`./mobile/`](./mobile/) – device emulation test
+- [`./mobile/`](./mobile/) – Mobile device tests
 
 ---
 

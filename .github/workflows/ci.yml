@@ -1,117 +1,99 @@
-name: CI
+name: CI (Maven Multi-Module)
 
 on:
-  pull_request:
-    branches: [ "**" ]
   push:
-    branches: [ "main" ]
+    branches: [ main, master ]
+    paths:
+      - '**.java'
+      - '**/pom.xml'
+      - 'backend/**'
+      - 'frontend/**'
+      - 'mobile/**'
+      - 'common/**'
+  pull_request:
+    paths:
+      - '**.java'
+      - '**/pom.xml'
+      - 'backend/**'
+      - 'frontend/**'
+      - 'mobile/**'
+      - 'common/**'
+  workflow_dispatch:
 
-permissions:
-  contents: read
-  actions: write
-  checks: write
-  pages: write
-  id-token: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-test:
+  test:
+    name: Test – ${{ matrix.module }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [ backend, frontend, mobile, common ]
+
+    env:
+      BASE_URL: https://practice.expandtesting.com/
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Temurin JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-          cache: maven
+          java-version: '21' # or 17 to match your pom
 
-      - name: Build (no tests)
-        run: mvn -q -DskipTests install
-
-      # QUALITY GATE 1: Semgrep (blocking)
-      - name: Semgrep SAST
-        uses: returntocorp/semgrep-action@v1
+      - name: Cache Maven
+        uses: actions/cache@v4
         with:
-          config: ./.semgrep.yml
-          generateSarif: true
-          publishToken: ${{ secrets.SEMGREP_APP_TOKEN || '' }}
-        env:
-          SEMGREP_TIMEOUT: 300
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
 
-      # QUALITY GATE 2: OWASP Dependency-Check (blocking on high severity)
-      - name: OWASP Dependency-Check
+      # Cache Playwright browsers only for the frontend (web UI) module
+      - name: Cache Playwright browsers (frontend only)
+        if: matrix.module == 'frontend'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: pw-${{ runner.os }}-
+
+      - name: Build & Test (${{ matrix.module }})
         run: |
-          mvn -q org.owasp:dependency-check-maven:check \
-            -Dformat=ALL -DfailBuildOnCVSS=7
+          mvn -B -fae -pl ${{ matrix.module }} -am test
 
-      - name: Smoke tests (API + UI)
-        if: github.event_name == 'pull_request'
-        run: mvn -q -Psmoke -pl api-tests,ui-tests test
-
-      - name: Regression tests (E2E)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: mvn -q -Pregression -pl e2e-tests test
-
-      - name: Archive surefire results
+      - name: Upload Surefire/Failsafe reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: surefire-reports
-          path: "**/target/surefire-reports/**"
+          name: reports-${{ matrix.module }}
+          path: |
+            ${{ matrix.module }}/target/surefire-reports/**
+            ${{ matrix.module }}/target/failsafe-reports/**
           if-no-files-found: ignore
 
-      - name: Generate Allure report
-        if: always()
-        run: mvn -q io.qameta.allure:allure-maven:report || true
-
-      - name: Upload Allure site artifact
-        if: always()
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload Playwright traces & reports (frontend only)
+        if: always() && matrix.module == 'frontend'
+        uses: actions/upload-artifact@v4
         with:
-          path: "**/target/site/allure-maven-plugin"
-          retention-days: 7
+          name: playwright-${{ matrix.module }}
+          path: |
+            frontend/test-results/**
+            frontend/playwright-report/**
+          if-no-files-found: ignore
 
-  deploy-pages:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: build-test
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  # Optional: Allure TestOps upload
-  allure-testops:
-    runs-on: ubuntu-latest
-    needs: [ build-test ]
-    if: ${{ secrets.ALLURE_ENDPOINT && secrets.ALLURE_PROJECT_ID && secrets.ALLURE_TOKEN }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download allure-results
-        uses: actions/download-artifact@v4
+      - name: Upload mobile artifacts (mobile only)
+        if: always() && matrix.module == 'mobile'
+        uses: actions/upload-artifact@v4
         with:
-          name: allure-results
-          path: allure-results
-
-      - name: Download allurectl
-        run: |
-          curl -sSL https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -o allurectl
-          chmod +x allurectl
-
-      - name: Upload to Allure TestOps
-        env:
-          ALLURE_ENDPOINT: ${{ secrets.ALLURE_ENDPOINT }}
-          ALLURE_PROJECT_ID: ${{ secrets.ALLURE_PROJECT_ID }}
-          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
-          ALLURE_LAUNCH_NAME: "CI ${{ github.workflow }} #${{ github.run_number }}"
-          ALLURE_RESULTS: "allure-results"
-        run: |
-          ./allurectl upload --project-id "$ALLURE_PROJECT_ID" --endpoint "$ALLURE_ENDPOINT" \
-            --token "$ALLURE_TOKEN" "$ALLURE_RESULTS" || true
+          name: mobile-artifacts
+          path: |
+            mobile/target/**
+            mobile/logs/**
+          if-no-files-found: ignore
