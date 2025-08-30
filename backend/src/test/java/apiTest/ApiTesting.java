@@ -8,9 +8,9 @@ import io.qameta.allure.*;
 import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import utilities.BackendBaseTest;
+import utilities.TestBseBackend;
 
-public class ApiTesting extends BackendBaseTest {
+public class ApiTesting extends TestBseBackend {
 
   @Test(groups = {"Regression"})
   @Feature("API")
