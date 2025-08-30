@@ -51,16 +51,13 @@ public class BackendBaseTest {
         if (playwright != null) playwright.close();
     }
 
-    @BeforeMethod(alwaysRun = true)
-    public void logCase(Method m, Object[] params) {
-        System.out.println("RUNNING: " + m.getName() + " " + Arrays.toString(params));
-    }
+//    @BeforeMethod(alwaysRun = true)
+//    public void logCase(Method m, Object[] params) {
+//        System.out.println("RUNNING: " + m.getName() + " " + Arrays.toString(params));
+//    }
 
-    @Step("GET {urlOrPath} expects {expectedStatus}")
-    public String get(String urlOrPath, int expectedStatus) {
-        return get(urlOrPath, expectedStatus, null, null);
-    }
 
+    // ---------- GET ----------
     @Step("GET {urlOrPath} with headers expects {expectedStatus}")
     public String get(String urlOrPath,
                       int expectedStatus,
@@ -79,6 +76,7 @@ public class BackendBaseTest {
         return body;
     }
 
+    // ---------- POST JSON ----------
     @Step("POST x-www-form-urlencoded to {urlOrPath} expects {expectedStatus}")
     public String postForm(String urlOrPath,
                            Map<String, String> formFields,
@@ -100,6 +98,150 @@ public class BackendBaseTest {
 
         return body;
     }
+
+    // ---------- PUT JSON ----------
+    @Step("PUT JSON to {urlOrPath} expects {expectedStatus}")
+    public String putJson(String urlOrPath,
+                          Object json,                          // Map/POJO/String
+                          int expectedStatus,
+                          Map<String, String> headers,
+                          Map<String, String> query) {
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        RequestOptions opts = RequestOptions.create().setData(json).setHeader("Content-Type", "application/json");
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res = request.put(url, opts);
+        String body = res.text();
+
+        System.out.println("[PUT] " + url);
+        System.out.println("Status: " + res.status());
+        System.out.println(body);
+
+        Assert.assertEquals(res.status(), expectedStatus,
+                "Status code is not " + expectedStatus + ". Body: " + body);
+        return body;
+    }
+
+    // ---------- PUT ----------
+    @Step("PUT x-www-form-urlencoded to {urlOrPath} expects {expectedStatus}")
+    public String putForm(String urlOrPath,
+                          Map<String, String> formFields,
+                          int expectedStatus,
+                          Map<String, String> headers,
+                          Map<String, String> query) {
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        FormData form = FormData.create();
+        formFields.forEach(form::set);
+
+        RequestOptions opts = RequestOptions.create().setForm(form); // sets Content-Type automatically
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res = request.put(url, opts);
+        String body = res.text();
+
+        System.out.println("[PUT] " + url);
+        System.out.println("Status: " + res.status());
+        System.out.println(body);
+
+        Assert.assertEquals(res.status(), expectedStatus,
+                "Status code is not " + expectedStatus + ". Body: " + body);
+        return body;
+    }
+
+    // ---------- PATCH JSON ----------
+    @Step("PATCH JSON to {urlOrPath} expects {expectedStatus}")
+    public String patchJson(String urlOrPath,
+                            Object json,
+                            int expectedStatus,
+                            Map<String, String> headers,
+                            Map<String, String> query) {
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        RequestOptions opts = RequestOptions.create().setData(json).setHeader("Content-Type", "application/json");
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res = request.patch(url, opts);
+        String body = res.text();
+
+        System.out.println("[PATCH] " + url);
+        System.out.println("Status: " + res.status());
+        System.out.println(body);
+
+        Assert.assertEquals(res.status(), expectedStatus,
+                "Status code is not " + expectedStatus + ". Body: " + body);
+        return body;
+    }
+
+    // ---------- PATCH ----------
+    @Step("PATCH x-www-form-urlencoded to {urlOrPath} expects {expectedStatus}")
+    public String patchForm(String urlOrPath,
+                            Map<String, String> formFields,
+                            int expectedStatus,
+                            Map<String, String> headers,
+                            Map<String, String> query) {
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        FormData form = FormData.create();
+        formFields.forEach(form::set);
+
+        RequestOptions opts = RequestOptions.create().setForm(form);
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res = request.patch(url, opts);
+        String body = res.text();
+
+        System.out.println("[PATCH] " + url);
+        System.out.println("Status: " + res.status());
+        System.out.println(body);
+
+        Assert.assertEquals(res.status(), expectedStatus,
+                "Status code is not " + expectedStatus + ". Body: " + body);
+        return body;
+    }
+
+    // ---------- DELETE (no body) ----------
+    @Step("DELETE {urlOrPath} expects {expectedStatus}")
+    public String delete(String urlOrPath,
+                         int expectedStatus,
+                         Map<String, String> headers,
+                         Map<String, String> query) {
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        RequestOptions opts = RequestOptions.create();
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res = request.delete(url, opts);
+        String body = res.text();
+
+        System.out.println("[DELETE] " + url);
+        System.out.println("Status: " + res.status());
+        System.out.println(body);
+
+        Assert.assertEquals(res.status(), expectedStatus,
+                "Status code is not " + expectedStatus + ". Body: " + body);
+        return body;
+    }
+
+    // ---------- DELETE with JSON body ----------
+    @Step("DELETE JSON to {urlOrPath} expects {expectedStatus}")
+    public String deleteJson(String urlOrPath,
+                             Object json,
+                             int expectedStatus,
+                             Map<String, String> headers,
+                             Map<String, String> query) {
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        RequestOptions opts = RequestOptions.create().setData(json).setHeader("Content-Type", "application/json");
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res = request.delete(url, opts);
+        String body = res.text();
+
+        System.out.println("[DELETE] " + url);
+        System.out.println("Status: " + res.status());
+        System.out.println(body);
+
+        Assert.assertEquals(res.status(), expectedStatus,
+                "Status code is not " + expectedStatus + ". Body: " + body);
+        return body;
+    }
+
 
     @Step("{method} {urlOrPath} expects {expectedStatus}")
     public String http(String method,
