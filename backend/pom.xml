@@ -12,7 +12,6 @@
     <artifactId>backend</artifactId>
     <packaging>jar</packaging>
     <name>api</name>
-
     <dependencies>
         <dependency>
             <groupId>com.ronytech.automation</groupId>
@@ -42,7 +41,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>

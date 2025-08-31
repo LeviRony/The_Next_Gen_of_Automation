@@ -197,3 +197,8 @@ mvn -q spotless:apply
 # per-module:
 mvn -q -pl backend -am spotless:check
 ```
+
+---
+# User Input 
+Function that is allow you to get inputs from user console 
+UserInput.class

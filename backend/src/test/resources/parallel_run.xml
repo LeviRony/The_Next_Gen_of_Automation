@@ -4,6 +4,8 @@
         <listener class-name="utilities.TestBseBackend"/>
     </listeners>
     <test name="Regression">
+        <parameter name="name" value="Rony"/>
+        <parameter name="age" value="42"/>
         <groups>
             <run>
                 <include name="Regression"/>
