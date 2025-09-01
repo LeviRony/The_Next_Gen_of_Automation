@@ -1,8 +1,5 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 <suite name="Frontend Suite">
-    <listeners>
-        <listener class-name="utilities.TestBseBackend"/>
-    </listeners>
     <test name="Regression">
         <parameter name="name" value="Rony"/>
         <parameter name="age" value="42"/>

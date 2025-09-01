@@ -10,16 +10,15 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
-import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 
 public class TestBseBackend {
+
     private static final Logger log = LoggerFactory.getLogger(TestBseBackend.class);
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -81,9 +80,9 @@ public class TestBseBackend {
     // ---------- GET ----------
     @Step("GET {urlOrPath} with headers expects {expectedStatus}")
     public String get(String urlOrPath, int expectedStatus,
-                      Map<String, String> headers, Map<String, String> query) {
+                      Map<String, String> headers, String query) {
 
-        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        String url = resolveUrl(urlOrPath) + query;
         RequestOptions opts = RequestOptions.create();
         if (headers != null) headers.forEach(opts::setHeader);
 
@@ -274,7 +273,7 @@ public class TestBseBackend {
 
     @Step("{method} {urlOrPath} expects {expectedStatus}")
     public String http(String method, String urlOrPath, int expectedStatus,
-                       Map<String, String> headers, Map<String, String> query) {
+                       Map<String, String> headers, String query) {
         HttpMethod m = HttpMethod.valueOf(method.toUpperCase());
         switch (m) {
             case GET:

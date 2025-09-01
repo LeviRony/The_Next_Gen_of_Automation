@@ -1,5 +1,7 @@
 package configurations;
 
+
+
 public class BaseUri {
 
     public static String urlPractice() {
@@ -19,10 +21,11 @@ public class BaseUri {
 
     public static String urlPracticeTest2() {
         return switch (AutomationEnvProperties.ENV_TYPE) {
-            case DEV  -> "https://practice.dev.expandtesting.com/";
-            case QA   -> "https://practice.qa.expandtesting.com/";
-            case STG  -> "https://practice.stag.expandtesting.com/";
-            case PROD -> "https://practice.expandtesting.com/";
+            case "DEV"  -> "https://practice.dev.expandtesting.com/";
+            case "QA"   -> "https://practice.qa.expandtesting.com/";
+            case "STG"  -> "https://practice.stag.expandtesting.com/";
+            case "PROD" -> "https://practice.expandtesting.com/";
+            default -> throw new IllegalStateException("Unexpected value: " + AutomationEnvProperties.ENV_TYPE);
         };
     }
 }
