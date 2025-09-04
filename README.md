@@ -47,6 +47,15 @@ automation-project
 │   ├─ src/test/resources/test-suite.xml
 │   └─ src/test/java/com/appName/test.java
 │
+│
+├─ performance-module
+│   ├─ pom.xml
+│   ├─ jenkinsFile
+│   ├─ README.md
+│   ├─ src/test/resources/test-suite.xml
+│   └─ src/test/java/com/appName/test.java
+│
+│
 └─ backend-module
     ├─ pom.xml
     ├─ jenkinsFile
@@ -75,6 +84,8 @@ Ensure you have the following installed:
 - PlayWright
 - Appium + Android/iOS SDKs (for mobile tests)
 - Git
+- JMeter
+- AI MCP
 - Allure CLI (for report generation)
 
 ## Run tests
