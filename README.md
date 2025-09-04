@@ -8,7 +8,7 @@
 
 ## Multi-module Maven project:
 
-- [`./common/`](./common/) – shared Playwright setup, BaseTest, config
+- [`./common/`](./common/) – Shared Playwright setup, BaseTest, config
 - [`./backend/`](./backend/) – API tests with Playwright
 - [`./frontend/`](./frontend/) – Web UI tests
 - [`./mobile/`](./mobile/) – Mobile device tests
@@ -37,17 +37,20 @@ automation-project
 │   ├─ pom.xml
 │   ├─ jenkinsFile
 │   ├─ README.md 
-│   └─ src/test/java/webName/
+│   ├─ src/test/resources/test-suite.xml
+│   └─ src/test/java/webName/test.java
 │
 ├─ mobile-module
 │   ├─ pom.xml
 │   ├─ jenkinsFile
 │   ├─ README.md
-│   └─ src/test/java/com/appName/
+│   ├─ src/test/resources/test-suite.xml
+│   └─ src/test/java/com/appName/test.java
 │
 └─ backend-module
     ├─ pom.xml
     ├─ jenkinsFile
+    ├─ src/test/resources/test-suite.xml
     └─ src/test/java/
 ```
 ## Dependency Management
@@ -59,9 +62,6 @@ The modules projects calling versions from main POM
 
 
 
----
-
----
 
 ---
 
@@ -76,7 +76,7 @@ Ensure you have the following installed:
 - Appium + Android/iOS SDKs (for mobile tests)
 - Git
 - Allure CLI (for report generation)
-- 
+
 ## Run tests
 
 ```bash
@@ -132,7 +132,7 @@ mvn -q -pl ui-tests -Dtest=LoginSmokeTest test
 - `Negative`
 - `Preformance`
 - `Load`
-- 
+
 > Configure base URLs and options via system properties or environment variables (see `core/Env.java`).
 
 ## CI - Jenkins 
@@ -186,7 +186,7 @@ Are new dependencies necessary and appropriate?
 Does the code build without errors? Does it pass CI checks?
 
 ---
-## Forma
+## Format
 
 ```bash
 mvn -q spotless:check
