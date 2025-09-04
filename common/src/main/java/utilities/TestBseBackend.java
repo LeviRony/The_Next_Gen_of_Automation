@@ -16,12 +16,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// === MCP imports (same as frontend) ===
+import mcp.McpServerManager;
+import io.modelcontextprotocol.server.McpServerFeatures;
+import io.modelcontextprotocol.spec.McpSchema;
 
 public class TestBseBackend {
 
     private static final Logger log = LoggerFactory.getLogger(TestBseBackend.class);
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
+    private static final ThreadLocal<APIRequestContext> TL_REQ = new ThreadLocal<>();
+    private static final boolean MCP_ENABLED =
+            !"false".equalsIgnoreCase(System.getProperty("MCP_ENABLED",
+                    System.getenv().getOrDefault("MCP_ENABLED", "true")));
     protected Playwright playwright;
     protected APIRequestContext request;
 
@@ -43,41 +50,46 @@ public class TestBseBackend {
         return URLEncoder.encode(s, StandardCharsets.UTF_8);
     }
 
-
     private static String truncate(String s, int max) {
         if (s == null || s.length() <= max) return s;
         return s.substring(0, max) + " ...[truncated]";
     }
 
+    private static String safeText(APIResponse res) {
+        try {
+            return res.text();
+        } catch (RuntimeException e) {
+            return "<non-textual body>";
+        }
+    }
+
+    private static McpSchema.CallToolResult result(String text) {
+        return new McpSchema.CallToolResult(text, false);
+    }
+
     @BeforeClass(alwaysRun = true)
     public void createApiContext() {
+        if (MCP_ENABLED) {
+            McpServerManager.startIfNeeded();
+            registerBackendTools();
+            log.info("[MCP] Backend tools registered");
+        }
+
         playwright = Playwright.create();
         request = playwright.request().newContext(new APIRequest.NewContextOptions());
+        TL_REQ.set(request);
         log.info("Playwright API context created");
     }
 
     @AfterClass(alwaysRun = true)
     public void closeApiContext() {
+        TL_REQ.remove();
         if (request != null) request.dispose();
         if (playwright != null) playwright.close();
+        if (MCP_ENABLED) McpServerManager.stopIfRunning();
         log.info("Playwright API context closed");
     }
 
-//    @BeforeMethod(alwaysRun = true)
-//    public void startTesting(Method method) {
-//        log.info(">>> Start Testing: {} at {} <<<",
-//                method.getName(),
-//                LocalDateTime.now().format(fmt));
-//    }
-//
-//    @AfterMethod(alwaysRun = true)
-//    public void testEnded(Method method) {
-//        log.info(">>> Done Testing: {} at {} <<<",
-//                method.getName(),
-//                LocalDateTime.now().format(fmt));
-//    }
-
-    // ---------- GET ----------
     @Step("GET {urlOrPath} with headers expects {expectedStatus}")
     public String get(String urlOrPath, int expectedStatus,
                       Map<String, String> headers, String query) {
@@ -99,7 +111,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- POST x-www-form-urlencoded ----------
     @Step("POST x-www-form-urlencoded to {urlOrPath} expects {expectedStatus}")
     public String postForm(String urlOrPath, Map<String, String> formFields,
                            int expectedStatus, Map<String, String> headers) {
@@ -124,7 +135,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- PUT JSON ----------
     @Step("PUT JSON to {urlOrPath} expects {expectedStatus}")
     public String putJson(String urlOrPath, Object json, int expectedStatus,
                           Map<String, String> headers, Map<String, String> query) {
@@ -149,7 +159,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- PUT form ----------
     @Step("PUT x-www-form-urlencoded to {urlOrPath} expects {expectedStatus}")
     public String putForm(String urlOrPath, Map<String, String> formFields, int expectedStatus,
                           Map<String, String> headers, Map<String, String> query) {
@@ -174,7 +183,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- PATCH JSON ----------
     @Step("PATCH JSON to {urlOrPath} expects {expectedStatus}")
     public String patchJson(String urlOrPath, Object json, int expectedStatus,
                             Map<String, String> headers, Map<String, String> query) {
@@ -199,7 +207,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- PATCH form ----------
     @Step("PATCH x-www-form-urlencoded to {urlOrPath} expects {expectedStatus}")
     public String patchForm(String urlOrPath, Map<String, String> formFields, int expectedStatus,
                             Map<String, String> headers, Map<String, String> query) {
@@ -224,7 +231,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- DELETE (no body) ----------
     @Step("DELETE {urlOrPath} expects {expectedStatus}")
     public String delete(String urlOrPath, int expectedStatus,
                          Map<String, String> headers, Map<String, String> query) {
@@ -246,7 +252,6 @@ public class TestBseBackend {
         return body;
     }
 
-    // ---------- DELETE with JSON body ----------
     @Step("DELETE JSON to {urlOrPath} expects {expectedStatus}")
     public String deleteJson(String urlOrPath, Object json, int expectedStatus,
                              Map<String, String> headers, Map<String, String> query) {
@@ -282,6 +287,177 @@ public class TestBseBackend {
                 throw new IllegalArgumentException(
                         "http(...) here only demonstrates GET. Use postJson/postForm/... for others.");
         }
+    }
+
+    private void registerBackendTools() {
+        final String headersQueryProps = """
+                  "headers":{"type":"object","additionalProperties":{"type":"string"}},
+                  "query":{"type":"object","additionalProperties":{"type":"string"}},
+                  "expectedStatus":{"type":"integer","minimum":100,"maximum":599}
+                """;
+
+        var getSchema = """
+                {"type":"object","properties":{
+                  "urlOrPath":{"type":"string"},
+                """ + headersQueryProps + """
+                },"required":["urlOrPath"]}""";
+        McpServerFeatures.SyncToolSpecification apiGet =
+                new McpServerFeatures.SyncToolSpecification(
+                        new McpSchema.Tool("api.get", "HTTP GET via Playwright APIRequestContext", getSchema),
+                        (exchange, args) -> {
+                            APIRequestContext r = TL_REQ.get();
+                            if (r == null) return result("ERROR: no active APIRequestContext");
+                            String urlOrPath = (String) args.get("urlOrPath");
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> headers = (Map<String, String>) args.get("headers");
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> query = (Map<String, String>) args.get("query");
+                            Integer expected = (Integer) args.get("expectedStatus");
+
+                            String url = resolveUrl(urlOrPath) + buildQuery(query);
+                            RequestOptions opts = RequestOptions.create();
+                            if (headers != null) headers.forEach(opts::setHeader);
+
+                            APIResponse res = r.get(url, opts);
+                            String body = safeText(res);
+                            if (expected != null && res.status() != expected) {
+                                return result("FAIL " + res.status() + " body: " + truncate(body, 1024));
+                            }
+                            return result("OK " + res.status() + " body: " + truncate(body, 1024));
+                        }
+                );
+        var postFormSchema = """
+                {"type":"object","properties":{
+                  "urlOrPath":{"type":"string"},
+                  "form":{"type":"object","additionalProperties":{"type":"string"}},
+                """ + headersQueryProps + """
+                },"required":["urlOrPath","form"]}""";
+        McpServerFeatures.SyncToolSpecification apiPostForm =
+                new McpServerFeatures.SyncToolSpecification(
+                        new McpSchema.Tool("api.postForm", "POST x-www-form-urlencoded", postFormSchema),
+                        (exchange, args) -> {
+                            APIRequestContext r = TL_REQ.get();
+                            if (r == null) return result("ERROR: no active APIRequestContext");
+                            String urlOrPath = (String) args.get("urlOrPath");
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> form = (Map<String, String>) args.get("form");
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> headers = (Map<String, String>) args.get("headers");
+                            Integer expected = (Integer) args.get("expectedStatus");
+
+                            String url = resolveUrl(urlOrPath);
+                            FormData fd = FormData.create();
+                            if (form != null) form.forEach(fd::set);
+
+                            RequestOptions opts = RequestOptions.create().setForm(fd);
+                            if (headers != null) headers.forEach(opts::setHeader);
+
+                            APIResponse res = r.post(url, opts);
+                            String body = safeText(res);
+                            if (expected != null && res.status() != expected) {
+                                return result("FAIL " + res.status() + " body: " + truncate(body, 1024));
+                            }
+                            return result("OK " + res.status() + " body: " + truncate(body, 1024));
+                        }
+                );
+
+        var jsonSchema = """
+                {"type":"object","properties":{
+                  "urlOrPath":{"type":"string"},
+                  "json":{"type":"object"},
+                """ + headersQueryProps + """
+                },"required":["urlOrPath","json"]}""";
+
+        McpServerFeatures.SyncToolSpecification apiPutJson =
+                new McpServerFeatures.SyncToolSpecification(
+                        new McpSchema.Tool("api.putJson", "PUT JSON", jsonSchema),
+                        (exchange, args) -> jsonMethod("PUT", args)
+                );
+
+        McpServerFeatures.SyncToolSpecification apiPatchJson =
+                new McpServerFeatures.SyncToolSpecification(
+                        new McpSchema.Tool("api.patchJson", "PATCH JSON", jsonSchema),
+                        (exchange, args) -> jsonMethod("PATCH", args)
+                );
+
+        McpServerFeatures.SyncToolSpecification apiDeleteJson =
+                new McpServerFeatures.SyncToolSpecification(
+                        new McpSchema.Tool("api.deleteJson", "DELETE JSON", jsonSchema),
+                        (exchange, args) -> jsonMethod("DELETE_JSON", args) // special flag to use body
+                );
+
+        var delSchema = """
+                {"type":"object","properties":{
+                  "urlOrPath":{"type":"string"},
+                """ + headersQueryProps + """
+                },"required":["urlOrPath"]}""";
+        McpServerFeatures.SyncToolSpecification apiDelete =
+                new McpServerFeatures.SyncToolSpecification(
+                        new McpSchema.Tool("api.delete", "DELETE (no body)", delSchema),
+                        (exchange, args) -> {
+                            APIRequestContext r = TL_REQ.get();
+                            if (r == null) return result("ERROR: no active APIRequestContext");
+                            String urlOrPath = (String) args.get("urlOrPath");
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> headers = (Map<String, String>) args.get("headers");
+                            Integer expected = (Integer) args.get("expectedStatus");
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> query = (Map<String, String>) args.get("query");
+
+                            String url = resolveUrl(urlOrPath) + buildQuery(query);
+                            RequestOptions opts = RequestOptions.create();
+                            if (headers != null) headers.forEach(opts::setHeader);
+
+                            APIResponse res = r.delete(url, opts);
+                            String body = safeText(res);
+                            if (expected != null && res.status() != expected) {
+                                return result("FAIL " + res.status() + " body: " + truncate(body, 1024));
+                            }
+                            return result("OK " + res.status() + " body: " + truncate(body, 1024));
+                        }
+                );
+
+        McpServerManager.registerTool(apiGet);
+        McpServerManager.registerTool(apiPostForm);
+        McpServerManager.registerTool(apiPutJson);
+        McpServerManager.registerTool(apiPatchJson);
+        McpServerManager.registerTool(apiDeleteJson);
+        McpServerManager.registerTool(apiDelete);
+    }
+
+    private McpSchema.CallToolResult jsonMethod(String verb, Map<String, Object> args) {
+        APIRequestContext r = TL_REQ.get();
+        if (r == null) return result("ERROR: no active APIRequestContext");
+
+        String urlOrPath = (String) args.get("urlOrPath");
+        Object json = args.get("json");
+        @SuppressWarnings("unchecked")
+        Map<String, String> headers = (Map<String, String>) args.get("headers");
+        Integer expected = (Integer) args.get("expectedStatus");
+        @SuppressWarnings("unchecked")
+        Map<String, String> query = (Map<String, String>) args.get("query");
+
+        String url = resolveUrl(urlOrPath) + buildQuery(query);
+        RequestOptions opts = RequestOptions.create()
+                .setHeader("Content-Type", "application/json")
+                .setData(json);
+        if (headers != null) headers.forEach(opts::setHeader);
+
+        APIResponse res;
+        switch (verb) {
+            case "PUT" -> res = r.put(url, opts);
+            case "PATCH" -> res = r.patch(url, opts);
+            case "DELETE_JSON" -> res = r.delete(url, opts);
+            default -> {
+                return result("ERROR: unsupported verb " + verb);
+            }
+        }
+
+        String body = safeText(res);
+        if (expected != null && res.status() != expected) {
+            return result("FAIL " + res.status() + " body: " + truncate(body, 1024));
+        }
+        return result("OK " + res.status() + " body: " + truncate(body, 1024));
     }
 
     public enum HttpMethod {GET, POST, PUT, PATCH, DELETE}

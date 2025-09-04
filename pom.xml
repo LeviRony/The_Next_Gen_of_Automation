@@ -28,6 +28,7 @@
         <allure.maven.plugin.version>2.12.0</allure.maven.plugin.version>
         <surefire.version>3.2.5</surefire.version>
         <slf4j.version>2.0.13</slf4j.version>
+        <mcp.version>0.11.0</mcp.version>
     </properties>
 
     <build>
@@ -126,6 +127,11 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.modelcontextprotocol.sdk</groupId>
+                <artifactId>mcp</artifactId>
+                <version>${mcp.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

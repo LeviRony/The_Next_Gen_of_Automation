@@ -2,14 +2,12 @@
 <suite name="Frontend Suite">
     <test name="Regression">
         <groups>
-
             <run>
-                <include name="regression"/>
+                <include name="Regression"/>
             </run>
         </groups>
         <classes>
             <class name="HomePageTests"/>
         </classes>
-
     </test>
 </suite>
