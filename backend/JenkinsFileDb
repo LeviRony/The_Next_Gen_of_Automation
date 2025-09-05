@@ -1,0 +1,12 @@
+pipeline {
+  agent any
+  stages {
+    stage('Test'){ steps {
+      withEnv(['DB_USER=test','DB_PASS=test','DB_HOST=localhost','DB_NAME=appdb']){
+        sh 'docker run -d --rm --name pg -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=appdb -p 5432:5432 postgres:16-alpine'
+        sh 'mvn -Denv=ci clean verify'
+        sh 'docker stop pg'
+      }
+    }}
+  }
+}

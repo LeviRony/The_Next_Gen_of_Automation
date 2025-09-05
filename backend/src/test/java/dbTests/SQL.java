@@ -1,4 +1,4 @@
-package apiTest;
+package dbTests;
 
 import java.sql.*;
 

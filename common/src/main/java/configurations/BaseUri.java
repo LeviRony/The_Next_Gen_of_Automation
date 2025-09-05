@@ -1,7 +1,5 @@
 package configurations;
 
-
-
 public class BaseUri {
 
     public static String urlPractice() {
@@ -19,7 +17,7 @@ public class BaseUri {
      * Don't forget to update the AutomationEnvProperties options
      */
 
-    public static String urlPracticeTest2() {
+    public static String urlDbPracticeTest() {
         return switch (AutomationEnvProperties.ENV_TYPE) {
             case "DEV"  -> "https://practice.dev.expandtesting.com/";
             case "QA"   -> "https://practice.qa.expandtesting.com/";

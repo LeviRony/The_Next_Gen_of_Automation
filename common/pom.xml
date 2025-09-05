@@ -37,6 +37,51 @@
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
         </dependency>
+
+        <!-- === DB Dependencies === -->
+        <!-- Choose your DB driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.4</version>
+        </dependency>
+
+        <!-- MySQL -->
+        <!-- <dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId><version>9.0.0</version></dependency> -->
+
+        <!-- Connection pool -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+
+        <!-- Flyway (for migrations/fixtures) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>10.17.0</version>
+        </dependency>
+
+        <!-- Testcontainers for hermetic tests -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.20.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- For MongoDB  -->
+        <!--
+        <dependency>
+            <groupId>org.mongodb</groupId><artifactId>mongodb-driver-sync</artifactId><version>5.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId><artifactId>mongodb</artifactId><version>1.20.3</version>
+            <scope>test</scope>
+        </dependency>
+        -->
+
     </dependencies>
 
     <build>
