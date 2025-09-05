@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.levirony</groupId>
-    <artifactId>The_Next_Gen_of_Automation</artifactId>
+    <artifactId>the-next-gen-of-automation</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>The_Next_Gen_of_Automation (Parent)</name>
+    <name>the-next-gen-of-automation (parent)</name>
 
     <properties>
         <github.owner>LeviRony</github.owner>
