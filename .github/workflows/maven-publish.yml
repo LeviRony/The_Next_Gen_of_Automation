@@ -27,7 +27,7 @@ jobs:
           cache: maven
           server-id: github
           server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
+          server-password: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Debug Maven settings.xml
         run: |
