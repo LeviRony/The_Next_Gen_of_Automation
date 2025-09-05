@@ -8,16 +8,13 @@
     <artifactId>The_Next_Gen_of_Automation</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-
-    <modules>
-        <module>common</module>
-        <module>backend</module>
-        <module>frontend</module>
-        <module>mobile</module>
-        <module>performance</module>
-    </modules>
+    <name>The_Next_Gen_of_Automation (Parent)</name>
 
     <properties>
+        <!-- GitHub Packages coords (SET to your real repo) -->
+        <github.owner>LeviRony</github.owner>
+        <github.repo>The_Next_Gen_of_Automation</github.repo>
+        <github.pkg.url>https://maven.pkg.github.com/${github.owner}/${github.repo}</github.pkg.url>
 
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,10 +28,40 @@
         <jmeter.version>5.6.3</jmeter.version>
     </properties>
 
+    <modules>
+        <module>common</module>
+        <module>backend</module>
+        <module>frontend</module>
+        <module>mobile</module>
+        <module>performance</module>
+    </modules>
+
+    <!-- Deploy target -->
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages (releases)</name>
+            <url>${github.pkg.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <name>GitHub Packages (snapshots)</name>
+            <url>${github.pkg.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>${github.pkg.url}</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+
     <build>
         <pluginManagement>
             <plugins>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -43,6 +70,7 @@
                         <release>${maven.compiler.release}</release>
                     </configuration>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -95,6 +123,12 @@
                         <failsOnError>true</failsOnError>
                         <violationSeverity>error</violationSeverity>
                     </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.1.2</version>
                 </plugin>
             </plugins>
         </pluginManagement>

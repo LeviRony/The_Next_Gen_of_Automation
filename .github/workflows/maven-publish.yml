@@ -1,0 +1,49 @@
+name: Build & Publish to GitHub Packages
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "v*.*.*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Show Maven version & Java
+        run: |
+          mvn -v
+          java -version
+
+      - name: Build (no tests) - all modules
+        if: github.event_name == 'pull_request'
+        run: mvn -B -ntp -DskipTests clean verify
+
+      - name: Build & Deploy (no tests) - publish to GitHub Packages
+        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/'))
+        run: |
+          # Option A: build & deploy all modules
+          mvn -B -ntp -DskipTests clean deploy
+
+          # Option B: exclude the performance module (uncomment if needed)
+          # mvn -B -ntp -DskipTests -pl '!performance' -am clean deploy
