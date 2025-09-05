@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.ronytech.automation</groupId>
+        <groupId>io.github.levirony</groupId>
         <artifactId>The_Next_Gen_of_Automation</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>

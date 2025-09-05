@@ -4,14 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.ronytech.automation</groupId>
+    <groupId>io.github.levirony</groupId>
     <artifactId>The_Next_Gen_of_Automation</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>The_Next_Gen_of_Automation (Parent)</name>
 
     <properties>
-        <!-- GitHub Packages coords (SET to your real repo) -->
         <github.owner>LeviRony</github.owner>
         <github.repo>The_Next_Gen_of_Automation</github.repo>
         <github.pkg.url>https://maven.pkg.github.com/${github.owner}/${github.repo}</github.pkg.url>
@@ -36,7 +35,6 @@
         <module>performance</module>
     </modules>
 
-    <!-- Deploy target -->
     <distributionManagement>
         <repository>
             <id>github</id>
