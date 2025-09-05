@@ -3,47 +3,52 @@ name: Build & Publish to GitHub Packages
 on:
   push:
     branches: [ "main" ]
-    tags:
-      - "v*.*.*"
+    tags: [ "v*.*.*" ]
   pull_request:
   workflow_dispatch:
 
+# Ensure the token can publish packages
 permissions:
   contents: read
   packages: write
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK 21 and Maven server creds
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
           server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Show Maven version & Java
-        run: |
-          mvn -v
-          java -version
+      - name: Verify registry URL expands correctly
+        run: mvn -q -DforceStdout help:evaluate -Dexpression=github.pkg.url
 
-      - name: Build (no tests) - all modules
+      - name: Build (PRs only, no deploy)
         if: github.event_name == 'pull_request'
         run: mvn -B -ntp -DskipTests clean verify
 
-      - name: Build & Deploy (no tests) - publish to GitHub Packages
+      - name: Build & Deploy (main branch / tags)
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/'))
         run: |
-          # Option A: build & deploy all modules
+          # Build & deploy all modules
           mvn -B -ntp -DskipTests clean deploy
-
-          # Option B: exclude the performance module (uncomment if needed)
+          # If your 'performance' module causes failures, use:
           # mvn -B -ntp -DskipTests -pl '!performance' -am clean deploy
+
+      - name: Debug Maven settings.xml
+        run: |
+          echo "== settings.xml path =="
+          echo "$HOME/.m2/settings.xml"
+          test -f "$HOME/.m2/settings.xml" && echo "settings.xml exists" || (echo "settings.xml MISSING" && exit 1)
+          echo "== redacted server entry =="
+          awk 'BEGIN{RS="</server>"} /<id>github<\/id>/{print $0"</server>"}' "$HOME/.m2/settings.xml" | sed 's/<password>.*<\/password>/<password>***<\/password>/'
