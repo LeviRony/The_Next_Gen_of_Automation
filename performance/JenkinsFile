@@ -1,0 +1,20 @@
+stage('Performance') {
+  steps {
+    dir('performance-module') {
+      sh '''
+        mvn -q com.lazerycode.jmeter:jmeter-maven-plugin:3.8.0:jmeter \
+          -Dthreads=5 -Dduration=30 -DrampUp=5 \
+          -DbaseUrl=https://practice.expandtesting.com
+      '''
+    }
+  }
+  post {
+    always {
+      archiveArtifacts artifacts: 'performance-module/target/jmeter/**', fingerprint: true
+      publishHTML([reportDir: 'performance-module/target/jmeter/reports',
+                   reportFiles: 'index.html',
+                   reportName: 'JMeter Report',
+                   keepAll: true])
+    }
+  }
+}

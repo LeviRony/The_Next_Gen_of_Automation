@@ -2,7 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.ronytech.automation</groupId>
         <artifactId>The_Next_Gen_of_Automation</artifactId>
@@ -12,9 +14,62 @@
     <artifactId>performance</artifactId>
 
     <properties>
-        <maven.compiler.source>24</maven.compiler.source>
-        <maven.compiler.target>24</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <threads>5</threads>
+        <duration>60</duration>  <!-- seconds -->
+        <rampUp>10</rampUp>
+        <baseUrl>https://practice.expandtesting.com</baseUrl>
     </properties>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.lazerycode.jmeter</groupId>
+                <artifactId>jmeter-maven-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <jmeterVersion>5.6.2</jmeterVersion>
+                    <testFilesDirectory>src/test/jmeter</testFilesDirectory>
+                    <testFilesIncluded>
+                        <jMeterTestFile>**/*.jmx</jMeterTestFile>
+                    </testFilesIncluded>
+                    <propertiesUser>
+                        <threads>${threads}</threads>
+                        <duration>${duration}</duration>
+                        <rampUp>${rampUp}</rampUp>
+                        <baseUrl>${baseUrl}</baseUrl>
+                    </propertiesUser>
+                    <resultsFileFormat>csv</resultsFileFormat>
+                    <generateReports>true</generateReports>
+                    <errorRateThresholdInPercent>5</errorRateThresholdInPercent>
+
+                    <ignoreResultFailures>true</ignoreResultFailures>  <!-- temporary for testing -->
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>configuration</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>configure</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jmeter-tests</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jmeter</goal>
+                            <goal>results</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
