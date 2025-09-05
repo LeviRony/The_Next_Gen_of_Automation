@@ -213,3 +213,44 @@ mvn -q -pl backend -am spotless:check
 # User Input 
 Function that is allow you to get inputs from user console 
 UserInput.class
+
+
+
+## Git Package
+You'll need to update your GitHub uesrName + create Token
+
+Local Development Setup (on your laptop)
+Generate a Personal Access Token (PAT) on GitHub:
+Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+.
+
+Click Generate new token (classic).
+Give it a name like maven-deploy.
+Scopes needed:
+> write:packages 
+> read:packages
+> repo
+
+Copy the token (you’ll only see it once).
+
+Create (or edit) 
+```path
+~/.m2/settings.xml
+```
+Path:
+```path 
+Linux/Mac: ~/.m2/settings.xml / open -a TextEdit ~/.m2/settings.xml
+
+Windows: C:\Users\<you>\.m2\settings.xml
+```
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github</id> <!-- must match <id> in pom.xml -->
+      <username>GITHUB_USERNAME</username>
+      <password>YOUR_PERSONAL_ACCESS_TOKEN</password>
+    </server>
+  </servers>
+</settings>
+ ```
