@@ -10,7 +10,8 @@ public class TestBaseDbServer {
 
     @BeforeClass
     public void init() {
-        String env = System.getProperty("env", "stg"); // align with your EnvironmentType
+        // Loading the properties file from common/src/main/resources/qa.properties
+        String env = System.getProperty("env", "qa");
         db = new DbClient(DbConfig.load(env));
     }
 

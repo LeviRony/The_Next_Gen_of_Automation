@@ -70,6 +70,12 @@
             <version>1.20.3</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.appium</groupId>
+            <artifactId>java-client</artifactId>
+            <version>9.5.0</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- For MongoDB  -->
         <!--

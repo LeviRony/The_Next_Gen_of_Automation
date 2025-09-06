@@ -2,7 +2,6 @@ package dataProviders.backend;
 
 import org.testng.annotations.DataProvider;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class LoginDataProviders {

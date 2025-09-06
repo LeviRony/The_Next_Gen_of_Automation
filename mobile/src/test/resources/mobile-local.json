@@ -1,0 +1,19 @@
+{
+  "base": {
+    "newCommandTimeout": 120
+  },
+  "android": {
+    "platformName": "Android",
+    "automationName": "UiAutomator2",
+    "deviceName": "Android Emulator",
+    "app": "/abs/path/to/app-debug.apk",
+    "appWaitActivity": "*"
+  },
+  "ios": {
+    "platformName": "iOS",
+    "automationName": "XCUITest",
+    "deviceName": "iPhone 15",
+    "platformVersion": "17.2",
+    "app": "/abs/path/to/app-debug.app"
+  }
+}

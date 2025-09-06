@@ -18,6 +18,10 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+        <!-- FOR MOBILE -->
+        <platform>android</platform> <!-- android | ios -->
+        <runEnv>local</runEnv>       <!-- local | bStack | sLabs -->
+
         <playwright.version>1.54.0</playwright.version>
         <testng.version>7.10.2</testng.version>
         <allure.testng.version>2.24.0</allure.testng.version>
@@ -25,6 +29,8 @@
         <surefire.version>3.2.5</surefire.version>
         <slf4j.version>2.0.13</slf4j.version>
         <jmeter.version>5.6.3</jmeter.version>
+        <appium.version>9.2.3</appium.version>
+        <jackson.databind.version>2.17.2</jackson.databind.version>
     </properties>
 
     <modules>
@@ -52,8 +58,12 @@
         <repository>
             <id>github</id>
             <url>${github.pkg.url}</url>
-            <releases><enabled>true</enabled></releases>
-            <snapshots><enabled>true</enabled></snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
@@ -116,7 +126,6 @@
                     <version>3.3.1</version>
                     <configuration>
                         <configLocation>config/checkstyle/checkstyle.xml</configLocation>
-                        <encoding>UTF-8</encoding>
                         <consoleOutput>true</consoleOutput>
                         <failsOnError>true</failsOnError>
                         <violationSeverity>error</violationSeverity>

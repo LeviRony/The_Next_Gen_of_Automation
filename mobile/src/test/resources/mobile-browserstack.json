@@ -1,0 +1,13 @@
+{
+  "base": { "bstack:options": { "projectName": "NextGen Mobile", "buildName": "build-${BUILD_NUMBER}" } },
+  "android": {
+    "platformName": "android",
+    "app": "bs://<uploaded-app-id>",
+    "deviceName": "Google Pixel 7"
+  },
+  "ios": {
+    "platformName": "ios",
+    "app": "bs://<uploaded-app-id>",
+    "deviceName": "iPhone 15"
+  }
+}

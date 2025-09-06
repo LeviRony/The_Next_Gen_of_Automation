@@ -1,0 +1,30 @@
+stage('Mobile E2E') {
+  matrix {
+    axes {
+      axis { name 'PLATFORM'; values 'android', 'ios' }
+    }
+    stages {
+      stage('Run') {
+        steps {
+          dir('mobile') {
+            sh """
+              mvn -q -Dplatform=${PLATFORM} -DrunEnv=${RUN_ENV:-local} \
+                 -Dcap.deviceName="${PLATFORM == 'ios' ? 'iPhone 15' : 'Pixel_7_API_34'}" \
+                 -Dcap.app="${PLATFORM == 'ios' ? env.IOS_APP : env.ANDROID_APP}" \
+                 test
+            """
+          }
+        }
+        post {
+          always {
+            archiveArtifacts artifacts: 'mobile/target/surefire-reports/**', fingerprint: true
+            allure([
+              includeProperties: false, jdk: '',
+              results: [[path: 'mobile/target/allure-results']]
+            ])
+          }
+        }
+      }
+    }
+  }
+}
