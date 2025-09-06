@@ -1,22 +1,276 @@
 pipeline {
   agent any
-  options { ansiColor('xterm'); timestamps() }
+  options {
+    timestamps()
+    ansiColor('xterm')
+    durabilityHint('MAX_SURVIVABILITY')
   }
+
+  /***********************
+   * Parameters (toggles)
+   ***********************/
+  parameters {
+    // What to run
+    booleanParam(name: 'RUN_BACKEND',    defaultValue: true,  description: 'Run API+DB tests')
+    booleanParam(name: 'RUN_FRONTEND',   defaultValue: true,  description: 'Run Playwright UI tests')
+    booleanParam(name: 'RUN_MOBILE',     defaultValue: true,  description: 'Run Appium tests')
+    booleanParam(name: 'RUN_PERFORMANCE',defaultValue: true,  description: 'Run JMeter performance tests')
+
+    // Shared env key
+    choice(name: 'ENV', choices: ['ci','qa','stg'], description: 'Environment key (-Denv)')
+
+    /******** Backend (API+DB) ********/
+    string(name: 'API_BASE_URL', defaultValue: 'https://practice.expandtesting.com', description: 'API base URL')
+    choice(name: 'API_PLAN', choices: ['Sanity','Regression','Negative','all'], description: 'TestNG groups for backend')
+    booleanParam(name: 'RESET_DB', defaultValue: false, description: 'Flyway clean+migrate before backend tests')
+    // Use Jenkins Credentials for DB; replace IDs below
+    // credentials: db.url, db.user, db.pass (or set as plain env vars on the agent)
+
+    /******** Frontend (Playwright) ********/
+    string(name: 'WEB_BASE_URL', defaultValue: 'https://practice.expandtesting.com', description: 'Web base URL')
+    choice(name: 'WEB_PLAN', choices: ['Sanity','Regression','Negative','all'], description: 'Test groups for frontend')
+    choice(name: 'BROWSERS', choices: ['chromium','firefox','webkit','all'], description: 'Browsers to run')
+    booleanParam(name: 'HEADLESS', defaultValue: true, description: 'Run browsers headless')
+    string(name: 'WEB_THREADS', defaultValue: '4', description: 'TestNG threads for frontend')
+
+    /******** Mobile (Appium) ********/
+    choice(name: 'MOBILE_PLATFORMS', choices: ['android','ios','both'], description: 'Mobile platforms to run')
+    choice(name: 'MOBILE_RUN_ENV', choices: ['local','bs','sl'], description: 'local | BrowserStack | SauceLabs')
+    string(name: 'APPIUM_URL', defaultValue: 'http://127.0.0.1:4723/', description: 'Appium server URL for local runs')
+    string(name: 'ANDROID_APP', defaultValue: '/abs/path/app.apk', description: 'Android app path or cloud app id')
+    string(name: 'IOS_APP', defaultValue: '/abs/path/App.app', description: 'iOS app path or cloud app id')
+    string(name: 'MOBILE_THREADS', defaultValue: '2', description: 'TestNG threads for mobile')
+
+    /******** Performance (JMeter) ********/
+    string(name: 'PERF_BASE_URL', defaultValue: 'https://practice.expandtesting.com', description: 'Target base URL')
+    string(name: 'PERF_THREADS',  defaultValue: '5', description: 'Virtual users')
+    string(name: 'PERF_DURATION', defaultValue: '60', description: 'Duration (sec)')
+    string(name: 'PERF_RAMPUP',   defaultValue: '10', description: 'Ramp-up (sec)')
+    choice(name: 'PERF_PLAN', choices: ['smoke-get','checkout','search','all'], description: 'JMeter plan (by name)')
+  }
+
+  environment {
+    // DB credentials via Jenkins creds (replace IDs to match your Jenkins)
+    DB_URL    = credentials('db.url')
+    DB_USER   = credentials('db.user')
+    DB_PASS   = credentials('db.pass')
+    DB_SCHEMA = "${env.DB_SCHEMA ?: 'public'}"
+  }
+
   stages {
+
     stage('Checkout') {
       steps { checkout scm }
     }
-    stage('Build & Unit') {
+
+    stage('Build (no tests)') {
       steps { sh 'mvn -q -DskipTests install' }
     }
-    stage('Allure Report') {
-      steps { sh 'mvn -q io.qameta.allure:allure-maven:report || true' }
-      post { always { archiveArtifacts artifacts: '**/allure-results/**', allowEmptyArchive: true } }
+
+    /******** Optional DB reset before backend ********/
+    stage('Reset Test Data') {
+      when { allOf { expression { return params.RUN_BACKEND }; expression { return params.RESET_DB } } }
+      steps {
+        dir('db') {
+          sh """
+            mvn -q flyway:clean flyway:migrate \
+              -Ddb.url='${DB_URL}' -Ddb.user='${DB_USER}' -Ddb.pass='${DB_PASS}' \
+              -Ddb.schema='${DB_SCHEMA}'
+          """
+        }
+      }
     }
-  }
+
+    /******** Install Playwright browsers once ********/
+    stage('Install Playwright Browsers') {
+      when { expression { return params.RUN_FRONTEND } }
+      steps {
+        dir('frontend') {
+          sh 'mvn -q exec:java -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install"'
+        }
+      }
+    }
+
+    /******** Run everything (in parallel blocks) ********/
+    stage('Test Suites') {
+      parallel {
+
+        /***** Backend (API + DB) *****/
+        stage('Backend') {
+          when { expression { return params.RUN_BACKEND } }
+          stages {
+            stage('API+DB Matrix') {
+              matrix {
+                axes {
+                  axis {
+                    name 'TEST_GROUP'
+                    values("${params.API_PLAN == 'all' ? 'Sanity,Regression,Negative' : params.API_PLAN}")
+                  }
+                }
+                stages {
+                  stage('Run') {
+                    steps {
+                      dir('backend') {
+                        sh """
+                          mvn -q clean test \
+                            -Denv=${params.ENV} \
+                            -Dapi.baseUrl='${params.API_BASE_URL}' \
+                            -Dgroups=${TEST_GROUP} \
+                            -Dsurefire.rerunFailingTestsCount=1
+                        """
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    archiveArtifacts artifacts: 'backend/target/surefire-reports/**', fingerprint: true
+                    allure([ includeProperties: false, jdk: '', results: [[path: 'backend/target/allure-results']] ])
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        /***** Frontend (Playwright) *****/
+        stage('Frontend') {
+          when { expression { return params.RUN_FRONTEND } }
+          stages {
+            stage('UI Matrix') {
+              matrix {
+                axes {
+                  axis {
+                    name 'TEST_GROUP'
+                    values("${params.WEB_PLAN == 'all' ? 'Sanity,Regression,Negative' : params.WEB_PLAN}")
+                  }
+                  axis {
+                    name 'PW_BROWSER'
+                    values("${params.BROWSERS == 'all' ? 'chromium,firefox,webkit' : params.BROWSERS}")
+                  }
+                }
+                stages {
+                  stage('Run') {
+                    steps {
+                      dir('frontend') {
+                        sh """
+                          mvn -q clean test \
+                            -Denv=${params.ENV} \
+                            -Dweb.baseUrl='${params.WEB_BASE_URL}' \
+                            -Dbrowser=${PW_BROWSER} \
+                            -Dheadless=${params.HEADLESS} \
+                            -Dgroups=${TEST_GROUP} \
+                            -Dparallel=methods -DthreadCount=${params.WEB_THREADS} \
+                            -Dsurefire.rerunFailingTestsCount=1
+                        """
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    archiveArtifacts artifacts: 'frontend/target/**', fingerprint: true
+                    allure([ includeProperties: false, jdk: '', results: [[path: 'frontend/target/allure-results']] ])
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        /***** Mobile (Appium) *****/
+        stage('Mobile') {
+          when { expression { return params.RUN_MOBILE } }
+          stages {
+            stage('Mobile Matrix') {
+              matrix {
+                axes {
+                  axis {
+                    name 'PLATFORM'
+                    values("${params.MOBILE_PLATFORMS == 'both' ? 'android,ios' : params.MOBILE_PLATFORMS}")
+                  }
+                }
+                stages {
+                  stage('Run') {
+                    steps {
+                      dir('mobile') {
+                        sh """
+                          mvn -q clean test \
+                            -Dplatform=${PLATFORM} \
+                            -DrunEnv=${params.MOBILE_RUN_ENV} \
+                            -DappiumUrl='${params.APPIUM_URL}' \
+                            -Dcap.deviceName='${PLATFORM == 'ios' ? 'iPhone 15' : 'Pixel_7_API_34'}' \
+                            -Dcap.app='${PLATFORM == 'ios' ? params.IOS_APP : params.ANDROID_APP}' \
+                            -Dparallel=tests -DthreadCount=${params.MOBILE_THREADS} \
+                            -Dsurefire.rerunFailingTestsCount=1
+                        """
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    archiveArtifacts artifacts: 'mobile/target/surefire-reports/**', fingerprint: true
+                    allure([ includeProperties: false, jdk: '', results: [[path: 'mobile/target/allure-results']] ])
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        /***** Performance (JMeter) *****/
+        stage('Performance') {
+          when { expression { return params.RUN_PERFORMANCE } }
+          stages {
+            stage('JMeter Matrix') {
+              matrix {
+                axes {
+                  axis {
+                    name 'TEST_PLAN'
+                    values("${params.PERF_PLAN == 'all' ? 'smoke-get,checkout,search' : params.PERF_PLAN}")
+                  }
+                }
+                stages {
+                  stage('Run') {
+                    steps {
+                      dir('performance') {
+                        sh """
+                          mvn -q clean verify \
+                            -Dthreads=${params.PERF_THREADS} \
+                            -Dduration=${params.PERF_DURATION} \
+                            -DrampUp=${params.PERF_RAMPUP} \
+                            -DbaseUrl='${params.PERF_BASE_URL}' \
+                            -Djmeter.test=.jmx/${TEST_PLAN}.jmx
+                        """
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    archiveArtifacts artifacts: 'performance/target/jmeter/**', fingerprint: true
+                    publishHTML(target: [
+                      allowMissing: false,
+                      keepAll: true,
+                      reportDir: 'performance/target/jmeter/reports',
+                      reportFiles: 'index.html',
+                      reportName: "JMeter Report - ${TEST_PLAN}"
+                    ])
+                  }
+                }
+              }
+            }
+          }
+        }
+
+      } // end parallel
+    }
+
+  } // end stages
+
   post {
-    always {
-      archiveArtifacts artifacts: '**/target/surefire-reports/**', allowEmptyArchive: true
-    }
+    always { echo 'Full CI pipeline complete.' }
+    failure { echo 'One or more suites failed. Check Allure/JMeter reports.' }
   }
 }

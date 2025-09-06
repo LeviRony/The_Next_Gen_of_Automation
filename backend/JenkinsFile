@@ -1,0 +1,68 @@
+pipeline {
+  agent any
+  options { timestamps() }
+  parameters {
+    choice(name: 'ENV', choices: ['ci','qa','stg'], description: 'Target environment key (-Denv)')
+    string(name: 'API_BASE_URL', defaultValue: 'https://practice.expandtesting.com', description: 'API base URL')
+    choice(name: 'PLAN', choices: ['Sanity','Regression','Negative','all'], description: 'Test plan/group to run')
+    booleanParam(name: 'RESET_DB', defaultValue: false, description: 'Flyway clean+migrate before tests')
+  }
+
+  environment {
+    DB_URL    = credentials('db.url')     // replace with Jenkins IDs or env vars
+    DB_USER   = credentials('db.user')
+    DB_PASS   = credentials('db.pass')
+    DB_SCHEMA = "${env.DB_SCHEMA ?: 'public'}"
+  }
+
+  stages {
+    stage('Reset Test Data') {
+      when { expression { return params.RESET_DB } }
+      steps {
+        dir('db') {
+          sh """
+            mvn -q flyway:clean flyway:migrate \
+              -Ddb.url=${DB_URL} -Ddb.user=${DB_USER} -Ddb.pass=${DB_PASS} \
+              -Ddb.schema=${DB_SCHEMA}
+          """
+        }
+      }
+    }
+
+    stage('Backend (API + DB)') {
+      matrix {
+        axes {
+          axis {
+            name 'TEST_GROUP'
+            values "${params.PLAN == 'all' ? 'Sanity,Regression,Negative' : params.PLAN}"
+          }
+        }
+        stages {
+          stage('Run') {
+            steps {
+              dir('backend') {
+                sh """
+                  mvn -q clean test \
+                    -Denv=${params.ENV} \
+                    -Dapi.baseUrl=${params.API_BASE_URL} \
+                    -Dgroups=${TEST_GROUP} \
+                    -Dsurefire.rerunFailingTestsCount=1
+                """
+              }
+            }
+          }
+        }
+        post {
+          always {
+            archiveArtifacts artifacts: "backend/target/surefire-reports/**", fingerprint: true
+            allure([
+              includeProperties: false,
+              jdk: '',
+              results: [[path: 'backend/target/allure-results']]
+            ])
+          }
+        }
+      }
+    }
+  }
+}

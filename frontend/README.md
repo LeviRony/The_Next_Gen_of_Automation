@@ -1,8 +1,19 @@
-# Frontend WebUI Module - Playwright_project
+# # Frontend WebUI Module - Playwright_project
 
-Contains web UI tests and page objects.
+This module contains Web UI tests written with Playwright for Java.
+It follows the Page Object Model (POM) pattern for maintainability.
+---
 
-Example Page Object:
+## Prerequisites
+
+* Java 17+
+* Maven 3.9+
+* Node.js (for Playwright drivers)
+* Browsers installed via Playwright (mvn exec:java -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install")
+
+---
+
+### Example Page Object:
 
 ```java
 public class LoginPage {
@@ -26,7 +37,9 @@ public class LoginPage {
 }
 ```
 
-Sample Test:
+---
+
+### Sample Test:
 
 ```java
 
@@ -40,9 +53,23 @@ public void testLogin() {
 
 ```
 
+### Running Tests
+
+```bash
+mvn -pl frontend -am test
+```
+
+Override environment or browser if needed:
+
+```bash
+mvn -pl frontend -am test -Denv=stg -Dbrowser=chromium
+```
+
 ---
 
-## Running Codegen
+# Playwright Tools
+
+### Codegen (Test Recorder)
 
 Use the codegen command to run the test generator, followed by the URL of the website you want to generate tests for.
 The URL is optional, and you can always run the command without it and then add the URL directly into the browser window
@@ -60,11 +87,13 @@ instead.
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="codegen demo.playwright.dev/todomvc"
 ```
 
-## Opening Trace Viewer
+### Opening Trace Viewer
 
 You can open a saved trace using either the Playwright CLI or in the browser at trace.playwright.dev. Make sure to add
 the full path to where your trace.zip file is located.
 
 ``` 
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="show-trace trace.zip"
-```
+``` 
+
+Open also in browser: trace.playwright.dev.

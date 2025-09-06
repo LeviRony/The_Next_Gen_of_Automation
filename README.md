@@ -28,7 +28,10 @@ automation-project
 │   ├─ jenkinsFile
 │   ├─ README.md
 │   └─ src/main/java/com/
+│                     ├─ allureReport/
 │                     ├─ configurations/
+│                     ├─ db/
+│                     ├─ drivers/
 │                     ├─ dataProviders/
 │                     ├─ pageObjects/
 │                     └─ utilities/
@@ -62,6 +65,8 @@ automation-project
     ├─ src/test/resources/test-suite.xml
     └─ src/test/java/
 ```
+
+
 ## Dependency Management
 All projects dependencies are heirs versions from main POM.xml
 > ```<dependencyName.version>x.x.x</dependency.version>```
@@ -88,20 +93,8 @@ Ensure you have the following installed:
 - AI MCP
 - Allure CLI (for report generation)
 
-## Run tests
 
-```bash
-# Run per module:
-
-mvn -pl web test
-mvn -pl mobile test
-mvn -pl api test
-
-# Run all modules:
- mvn test
-
-```
-
+---
 ## Allure report
 
 1) Generate results by running tests (Allure results in `**/allure-results`).
@@ -109,16 +102,18 @@ mvn -pl api test
 
 ```
 mvn io.qameta.allure:allure-maven:report
+or
+mvn allure:report
 ```
 
 The HTML report will be in `target/site/allure-maven-plugin` under each module. Open `index.html` in a browser.
-
+---
 ### Notes
 
 - Configure `src/main/resources/config.properties` in `common` or pass JVM properties:
     - `-Dheadless=false` to see the browser.
 - Update devices or base URLs as needed.
-
+---
 ## Quick Start
 
 ```bash
@@ -134,8 +129,8 @@ mvn -q -am -pl frontend, backend, mobile -Dgroups=Regression test
 # Run a single test
 mvn -q -pl ui-tests -Dtest=LoginSmokeTest test
 
-
 ```
+---
 ## Test Groups
 
 - `Sanity`
@@ -214,7 +209,7 @@ mvn -q -pl backend -am spotless:check
 Function that is allow you to get inputs from user console 
 UserInput.class
 
-
+---
 
 ## Git Package
 You'll need to update your GitHub uesrName + create Token
@@ -254,3 +249,9 @@ Windows: C:\Users\<you>\.m2\settings.xml
   </servers>
 </settings>
  ```
+---
+
+
+
+## License
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.

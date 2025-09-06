@@ -1,0 +1,113 @@
+pipeline {
+  agent any
+  options {
+    timestamps()
+    ansiColor('xterm')
+    durabilityHint('MAX_SURVIVABILITY')
+    // keep console concise; bump if you need more logs
+    // buildDiscarder(logRotator(numToKeepStr: '20'))
+  }
+
+  parameters {
+    choice(name: 'ENV', choices: ['ci','qa','stg'], description: 'Target environment (-Denv)')
+    string(name: 'BASE_URL', defaultValue: 'https://practice.expandtesting.com', description: 'Base URL (-Dweb.baseUrl)')
+    // Which groups to run (you can add more)
+    choice(name: 'PLAN', choices: ['Sanity','Regression','Negative','all'], description: 'TestNG groups to run')
+    // Which browsers to run
+    choice(name: 'BROWSERS', choices: ['chromium','firefox','webkit','all'], description: 'Browsers to run')
+    booleanParam(name: 'HEADLESS', defaultValue: true, description: 'Run headless (true/false)')
+    string(name: 'THREADS', defaultValue: '4', description: 'TestNG parallel threads (e.g., 4)')
+  }
+
+  environment {
+    // Add a shared local Maven repo cache on agents if you have one:
+    // MAVEN_OPTS = "-Dmaven.repo.local=${env.WORKSPACE}@tmp/.m2"
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build (no tests)') {
+      steps {
+        sh 'mvn -q -DskipTests install'
+      }
+    }
+
+    stage('Install Playwright Browsers') {
+      steps {
+        dir('frontend') {
+          sh 'mvn -q exec:java -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install"'
+        }
+      }
+    }
+
+    stage('Frontend (Playwright)') {
+      matrix {
+        axes {
+          axis {
+            name 'TEST_GROUP'
+            values("${params.PLAN == 'all' ? 'Sanity,Regression,Negative' : params.PLAN}")
+          }
+          axis {
+            name 'PW_BROWSER'
+            values("${params.BROWSERS == 'all' ? 'chromium,firefox,webkit' : params.BROWSERS}")
+          }
+        }
+
+        // Optional: fail fast if one cell fails
+        // failFast true
+
+        stages {
+          stage('Run') {
+            steps {
+              dir('frontend') {
+                sh """
+                  mvn -q clean test \
+                    -Denv=${params.ENV} \
+                    -Dweb.baseUrl='${params.BASE_URL}' \
+                    -Dbrowser=${PW_BROWSER} \
+                    -Dheadless=${params.HEADLESS} \
+                    -Dgroups=${TEST_GROUP} \
+                    -Dsurefire.rerunFailingTestsCount=1 \
+                    -DthreadCount=${params.THREADS} \
+                    -Dparallel=methods
+                """
+              }
+            }
+          }
+        }
+
+        post {
+          always {
+            // Archive Playwright outputs (traces/videos/screenshots) if your framework writes them under target/
+            archiveArtifacts artifacts: "frontend/target/**", fingerprint: true
+
+            // Publish Allure for this matrix leg
+            allure([
+              includeProperties: false,
+              jdk: '',
+              results: [[path: 'frontend/target/allure-results']]
+            ])
+          }
+        }
+      } // end matrix
+    }
+
+  } // end stages
+
+  post {
+    always {
+      // Optionally publish an aggregated HTML report if you generate one under frontend/target/site
+      // publishHTML([reportDir: 'frontend/target/site', reportFiles: 'index.html', reportName: 'Frontend Site'])
+      echo "Pipeline complete."
+    }
+    failure {
+      echo "Some matrix legs failed. Check Allure reports per browser/group."
+    }
+  }
+}
