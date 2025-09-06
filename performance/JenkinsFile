@@ -4,17 +4,28 @@ stage('Performance') {
       sh '''
         mvn -q com.lazerycode.jmeter:jmeter-maven-plugin:3.8.0:jmeter \
           -Dthreads=5 -Dduration=30 -DrampUp=5 \
-          -DbaseUrl=https://practice.expandtesting.com
+          -DbaseUrl=https://practice.expandtesting.com \
+          -D_ALLURE_REPORT_PATH=$WORKSPACE/performance-module/target/jmeter/allure-results \
+          -D_ALLURE_CONFIG_PATH=$WORKSPACE/performance-module/allure/allure-reporter.groovy
       '''
     }
   }
   post {
     always {
       archiveArtifacts artifacts: 'performance-module/target/jmeter/**', fingerprint: true
+
+      // JMeter native HTML
       publishHTML([reportDir: 'performance-module/target/jmeter/reports',
                    reportFiles: 'index.html',
                    reportName: 'JMeter Report',
                    keepAll: true])
+
+      // Allure collecting allure-results
+      allure([
+        includeProperties: false,
+        jdk: '',
+        results: [[path: 'performance-module/target/jmeter/allure-results']]
+      ])
     }
   }
 }
