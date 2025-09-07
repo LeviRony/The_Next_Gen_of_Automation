@@ -1,14 +1,13 @@
-import allureReport.AllureLogger;
 import dataProviders.mobile.LoginApp.HomePage;
 import dataProviders.mobile.LoginApp.LoginPage;
 import io.appium.java_client.AppiumDriver;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import utilities.TestBseMobile;
+import utilities.TestBaseMobile;
 
 import static drivers.MobileDriverManager.*;
 
-public class LoginTest extends TestBseMobile {
+public class LoginTest extends TestBaseMobile {
 
 
     @Test(groups = {"Regression"})

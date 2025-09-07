@@ -8,7 +8,7 @@ import org.testng.annotations.*;
 import static drivers.MobileDriverManager.start;
 
 @Listeners({AllureTestNg.class})
-public class TestBseMobile<T extends TestBseMobile<T>> {
+public class TestBaseMobile<T extends TestBaseMobile<T>> {
 
     protected <E> E on(E pageObject) {
         return pageObject;
