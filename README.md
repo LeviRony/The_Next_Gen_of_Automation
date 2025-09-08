@@ -3,7 +3,7 @@
 [![Maven](https://img.shields.io/badge/Maven-3.8+-blue)](https://maven.apache.org/)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-
+![Coverage](https://img.shields.io/codecov/c/github/user/repo/main?logo=codecov)
 ---
 
 ## Multi-module Maven project:
