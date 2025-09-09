@@ -17,7 +17,6 @@
         <module>mobile</module>
         <module>performance</module>
     </modules>
-
     <properties>
         <github.owner>LeviRony</github.owner>
         <github.repo>The_Next_Gen_of_Automation</github.repo>
@@ -26,9 +25,12 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- FOR MOBILE -->
-        <platform>android</platform> <!-- android | ios -->
-        <runEnv>local</runEnv>       <!-- local | bStack | sLabs -->
+        <!-- FOR TEST ENVIRONMENT -->
+        <environment>PROD</environment>  <!-- QA | STG | PROD-->
+
+        <!-- FOR TEST MOBILE -->
+        <platform>android</platform>
+        <runEnv>local</runEnv>      <!-- local | bStack | sLabs -->
 
         <playwright.version>1.54.0</playwright.version>
         <testng.version>7.10.2</testng.version>
@@ -89,6 +91,11 @@
                             <include>**/*Test.java</include>
                             <include>**/*Tests.java</include>
                         </includes>
+                        <systemPropertyVariables>
+                            <tests.general.envType>${environment}</tests.general.envType>
+                            <platform>${platform}</platform>
+                            <runEnv>${runEnv}</runEnv>
+                        </systemPropertyVariables>
                     </configuration>
                 </plugin>
 

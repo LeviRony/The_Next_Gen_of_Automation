@@ -5,8 +5,6 @@ import drivers.MobileDriverManager;
 import io.qameta.allure.testng.AllureTestNg;
 import org.testng.annotations.*;
 
-import static drivers.MobileDriverManager.start;
-
 @Listeners({AllureTestNg.class})
 public class TestBaseMobile<T extends TestBaseMobile<T>> {
 
@@ -17,14 +15,14 @@ public class TestBaseMobile<T extends TestBaseMobile<T>> {
     @BeforeMethod(alwaysRun = true)
     public void startDriver() {
         AllureLogger.step("Start Mobile Driver");
-        start();
+        MobileDriverManager.start();
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
         AllureLogger.step("Closing Mobile Driver");
         try {
-            MobileDriverManager.quitIfAny();
+            MobileDriverManager.quit();
         } catch (Exception ignored) {
         }
     }

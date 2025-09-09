@@ -35,7 +35,9 @@ public void getUserTest() {
 * Base URLs can be overridden at runtime:
 
 ```bash
-mvn -pl backend -am test -Dapi.baseUrl=https://stg.api.example.com
+> mvn -pl backend -am test -Dtests.general.envType=PROD
+or 
+> mvn clean test -Dtests.general.envType=PROD
 ```
 
 ---

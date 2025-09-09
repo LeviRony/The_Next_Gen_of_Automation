@@ -95,6 +95,39 @@ Ensure you have the following installed:
 
 
 ---
+
+## Environment Configuration
+This project supports multiple environments (DEV, QA, STG, PROD) for test execution.
+The active environment is controlled by the tests.general.envType system property, which flows into the Java code:
+```path 
+../common/src/main/java/configurations/BaseUri.java
+```
+```java
+protected static final String ENV_TYPE =
+        System.getProperty("tests.general.envType", "STG");
+```
+#### Default Behavior
+
+If no property is passed, the code falls back to STG as the default environment.
+
+#### Override at Runtime
+
+You can override the environment when running Maven by passing a system property:
+```bash
+mvn -Denvironment=PROD test
+```
+This will set tests.general.envType=PROD for the JVM.
+
+#### In CI/CD pipelines
+
+Always use the **override option** in your pipeline definitions to make sure the correct environment is targeted:
+
+```bash
+mvn -Denvironment=PROD test
+```
+
+---
+
 ## Allure report
 
 1) Generate results by running tests (Allure results in `**/allure-results`).
