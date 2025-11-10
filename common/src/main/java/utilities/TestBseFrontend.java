@@ -14,7 +14,7 @@ import org.testng.annotations.*;
 
 
 public class TestBseFrontend {
-    private static final Logger log = LoggerFactory.getLogger(TestBseFrontend.class);
+    protected static final Logger log = LoggerFactory.getLogger(TestBseFrontend.class);
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     protected Playwright playwright;
     protected Browser browser;
